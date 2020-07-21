@@ -76,6 +76,26 @@ public final class Bonsai {
         return nroot(product, count);
     }
 
+    public static <T extends Number> double harmonicMean(final T[] numbers) {
+        final int count = numbers.length;
+        if (count == 0)
+            throw new IllegalArgumentException("Cannot perform harmonic mean on an empty array.");
+        double reciprocalSum = 0.d;
+        for (final T t : numbers)
+            reciprocalSum += 1.d / t.doubleValue();
+        return count / reciprocalSum;
+    }
+
+    public static <T extends Number> double harmonicMean(final Collection<T> numbers) {
+        final int count = numbers.size();
+        if (count == 0)
+            throw new IllegalArgumentException("Cannot perform harmonic mean on an empty collection.");
+        double reciprocalSum = 0.d;
+        for (final T t : numbers)
+            reciprocalSum += 1.d / t.doubleValue();
+        return count / reciprocalSum;
+    }
+
     public static <T extends Number> double variance(final boolean subset, final T[] numbers) {
         final int count = numbers.length;
         if (count < 2) throw new IllegalArgumentException(String.format("too few numbers (%d), expected >= 2.", count));
@@ -103,8 +123,7 @@ public final class Bonsai {
 
     public static <T extends Number & Comparable<T>> T mode(final T[] numbers) {
         final int count = numbers.length;
-        if (count < 3)
-            throw new IllegalArgumentException(String.format("too few numbers (%d), expected >= 3.", count));
+        if (count < 3) throw new IllegalArgumentException(String.format("too few numbers (%d), expected >= 3.", count));
 
         final HashMap<T, Integer> modeMap = new HashMap<>(count);
         for (final T t : numbers)
