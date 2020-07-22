@@ -24,6 +24,7 @@
 
 package me.thevipershow.bonsai;
 
+import java.nio.BufferOverflowException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -96,29 +97,48 @@ public final class Bonsai {
         return count / reciprocalSum;
     }
 
-    public static <T extends Number> double variance(final boolean subset, final T[] numbers) {
+    public static <T extends Number> double variance(final T[] numbers) {
         final int count = numbers.length;
         if (count < 2) throw new IllegalArgumentException(String.format("too few numbers (%d), expected >= 2.", count));
         final double arithmeticMean = arithmeticMean(numbers);
         double gapsSum = 0.d;
         for (final T number : numbers) gapsSum += pow((number.doubleValue() - arithmeticMean), 2.d);
-        return gapsSum / (!subset ? count : count - 1);
+        return gapsSum / count - 1;
     }
 
-    public static <T extends Number> double variance(final boolean subset, final Collection<T> numbers) {
+    public static <T extends Number> double variance(final Collection<T> numbers) {
         final int count = numbers.size();
         if (count < 2) throw new IllegalArgumentException(String.format("too few numbers (%d), expected >= 2.", count));
         final double arithmeticMean = arithmeticMean(numbers);
         final double gapsSum = numbers.stream().mapToDouble(Number::doubleValue).map(a -> pow(a - arithmeticMean, 2.d)).sum();
-        return gapsSum / (!subset ? count : count - 1);
+        return gapsSum / count - 1;
     }
 
-    public static <T extends Number> double stdDeviation(final boolean subset, final T[] numbers) {
-        return sqrt(variance(subset, numbers));
+    public static <T extends Number> long factorial(final T number) throws BufferOverflowException {
+        if (number.intValue() < 0)
+            throw new IllegalArgumentException("Cannot calculate factorial of a negative number.");
+        if (number.intValue() == 0)
+            return 1;
+        long product = 1;
+        for (int i = 1; i <= number.intValue(); i++)
+            product *= i;
+        return product;
     }
 
-    public static <T extends Number> double stdDeviation(final boolean subset, final Collection<T> numbers) {
-        return sqrt(variance(subset, numbers));
+    public static <T extends Number> long[] factorial(final T[] numbers) throws BufferOverflowException {
+        if (numbers.length == 0) throw new IllegalArgumentException("An empty array has been passed.");
+        final long[] arr = new long[numbers.length];
+        for (int i = 0; i < numbers.length; i++)
+            arr[i] = factorial(numbers[i]);
+        return arr;
+    }
+
+    public static <T extends Number> double stdDeviation(final T[] numbers) {
+        return sqrt(variance(numbers));
+    }
+
+    public static <T extends Number> double stdDeviation(final Collection<T> numbers) {
+        return sqrt(variance(numbers));
     }
 
     public static <T extends Number & Comparable<T>> T mode(final T[] numbers) {
