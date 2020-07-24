@@ -26,8 +26,10 @@ package me.thevipershow.bonsai;
 
 import java.nio.BufferOverflowException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import static java.lang.Math.*;
 
@@ -179,5 +181,109 @@ public final class Bonsai {
             }
         }
         return modeValue.getKey();
+    }
+
+    public static class Range<T extends Number & Comparable<T>> {
+
+        private T lowerBound;
+        private T upperBound;
+
+        private boolean lowerBoundInclusive = true;
+        private boolean upperBoundInclusive = false;
+
+        private Range(final T lowerBound, final T upperBound) {
+            this.lowerBound = lowerBound;
+            this.upperBound = upperBound;
+        }
+
+        public void setLowerBound(final T lowerBound) {
+            this.lowerBound = lowerBound;
+        }
+
+        public void setUpperBound(final T upperBound) {
+            this.upperBound = upperBound;
+        }
+
+        public void setLowerBoundInclusive(final boolean lowerBoundInclusive) {
+            this.lowerBoundInclusive = lowerBoundInclusive;
+        }
+
+        public void setUpperBoundInclusive(final boolean upperBoundInclusive) {
+            this.upperBoundInclusive = upperBoundInclusive;
+        }
+
+        public T getLowerBound() {
+            return lowerBound;
+        }
+
+        public T getUpperBound() {
+            return upperBound;
+        }
+
+        public boolean isLowerBoundInclusive() {
+            return lowerBoundInclusive;
+        }
+
+        public boolean isUpperBoundInclusive() {
+            return upperBoundInclusive;
+        }
+
+        public boolean isInRange(final T number) {
+            if (lowerBound == null && upperBound == null) {
+                return true;
+            } else if (lowerBound == null) {
+                final int upperCompare = number.compareTo(upperBound);
+                return upperBoundInclusive ? (upperCompare < 1) : (upperCompare < 0);
+            } else if (upperBound == null) {
+                final int lowerCompare = number.compareTo(lowerBound);
+                return lowerBoundInclusive ? (lowerCompare > -1) : (lowerCompare > 0);
+            }
+            final int upperCompare = number.compareTo(upperBound);
+            final int lowerCompare = number.compareTo(lowerBound);
+            return upperBoundInclusive ?
+                    (lowerBoundInclusive ? (lowerCompare > -1 && upperCompare < 1) : (lowerCompare > 0 && upperCompare < 1))
+                    : (lowerBoundInclusive ? (lowerCompare > -1 && upperCompare < 0) : (lowerCompare > 0 && upperCompare < 0));
+        }
+
+        public static <T extends Number & Comparable<T>> Range<T> build(final T lowerBound, final T upperBound) {
+            return new Range<>(lowerBound, upperBound);
+        }
+
+    }
+
+    public static class IntRange extends Range<Integer> {
+
+        private IntRange(final Integer lowerBound, final Integer upperBound) {
+            super(lowerBound, upperBound);
+        }
+
+        public void forEach(final Consumer<Integer> consumer) {
+            int start = isLowerBoundInclusive() ? getLowerBound() : getLowerBound() + 1;
+            final int end = isUpperBoundInclusive() ? getUpperBound() : getUpperBound() - 1;
+            while (start != end) {
+                consumer.accept(start);
+                start++;
+            }
+        }
+    }
+
+    public static class DoubleRange extends Range<Double> {
+
+        private DoubleRange(final Double lowerBound, final Double upperBound) {
+            super(lowerBound, upperBound);
+        }
+
+        public void forEach(final Consumer<Double> consumer, final double increase) {
+            double start = isLowerBoundInclusive() ? getLowerBound() : getLowerBound() + increase;
+            final double end = isUpperBoundInclusive() ? getUpperBound() : getUpperBound() - increase;
+            while (start <= end) {
+                consumer.accept(start);
+                start += increase;
+            }
+        }
+    }
+
+    public static boolean areSimilar(final double first, final double second, final double delta) {
+        return Math.abs(second - first) <= delta;
     }
 }
