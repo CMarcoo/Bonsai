@@ -26,10 +26,10 @@ package me.thevipershow.bonsai;
 
 import java.nio.BufferOverflowException;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Consumer;
+import java.util.function.DoubleConsumer;
+import java.util.function.IntConsumer;
 
 import static java.lang.Math.*;
 
@@ -257,13 +257,17 @@ public final class Bonsai {
             super(lowerBound, upperBound);
         }
 
-        public void forEach(final Consumer<Integer> consumer) {
+        public void forEach(final IntConsumer consumer) {
             int start = isLowerBoundInclusive() ? getLowerBound() : getLowerBound() + 1;
             final int end = isUpperBoundInclusive() ? getUpperBound() : getUpperBound() - 1;
-            while (start != end) {
+            while (start <= end) {
                 consumer.accept(start);
                 start++;
             }
+        }
+
+        public static IntRange build(final int lowerBound, final int upperBound) {
+            return new IntRange(lowerBound, upperBound);
         }
     }
 
@@ -273,13 +277,17 @@ public final class Bonsai {
             super(lowerBound, upperBound);
         }
 
-        public void forEach(final Consumer<Double> consumer, final double increase) {
+        public void forEach(final DoubleConsumer consumer, final double increase) {
             double start = isLowerBoundInclusive() ? getLowerBound() : getLowerBound() + increase;
             final double end = isUpperBoundInclusive() ? getUpperBound() : getUpperBound() - increase;
             while (start <= end) {
                 consumer.accept(start);
                 start += increase;
             }
+        }
+
+        public static DoubleRange build(final double lowerBound, final double upperBound) {
+            return new DoubleRange(lowerBound, upperBound);
         }
     }
 
