@@ -24,12 +24,8 @@
 
 package me.thevipershow.bonsai;
 
-import java.nio.BufferOverflowException;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Consumer;
-import java.util.function.DoubleConsumer;
 import java.util.function.IntConsumer;
 
 import static java.lang.Math.*;
@@ -40,6 +36,10 @@ public final class Bonsai {
     }
 
     public static double nroot(final double number, final double pow) {
+        return round(pow(number, 1.d / pow));
+    }
+
+    public static float nroot(final float number, final float pow) {
         return round(pow(number, 1.d / pow));
     }
 
@@ -108,12 +108,12 @@ public final class Bonsai {
         return sum / count;
     }
 
-    public static double arithmeticMean(final float[] floats) {
+    public static float arithmeticMean(final float[] floats) {
         final int count = floats.length;
         if (count == 0)
             throw new IllegalArgumentException("Cannot perform arithmetic mean on an empty array.");
         if (count == 1) return floats[0];
-        double sum = 0.d;
+        float sum = 0.f;
         for (final float f : floats)
             sum += f;
         return sum / count;
@@ -179,11 +179,11 @@ public final class Bonsai {
         return nroot(product, count);
     }
 
-    public static double geometricMean(final float[] floats) {
+    public static float geometricMean(final float[] floats) {
         final int count = floats.length;
         if (count == 0)
             throw new IllegalArgumentException("Cannot perform arithmetic mean on an empty array.");
-        double product = 1.d;
+        float product = 1.f;
         for (final float f : floats)
             product *= f;
         return nroot(product, count);
@@ -249,11 +249,11 @@ public final class Bonsai {
         return count / reciprocalSum;
     }
 
-    public static double harmonicMean(final float[] floats) {
+    public static float harmonicMean(final float[] floats) {
         final int count = floats.length;
         if (count == 0)
             throw new IllegalArgumentException("Cannot perform harmonic mean on an empty array.");
-        double reciprocalSum = 0.d;
+        float reciprocalSum = 0.f;
         for (final float f : floats)
             reciprocalSum += 1.d / f;
         return count / reciprocalSum;
@@ -312,11 +312,11 @@ public final class Bonsai {
         return gapsSum / (count - 1);
     }
 
-    public static double variance(final float[] floats) {
+    public static float variance(final float[] floats) {
         final int count = floats.length;
         if (count < 2) throw new IllegalArgumentException(String.format("too few numbers (%d), expected >= 2.", count));
         final double arithmeticMean = arithmeticMean(floats);
-        double gapsSum = 0.d;
+        float gapsSum = 0.f;
         for (final float f : floats) gapsSum += pow(f - arithmeticMean, 2.d);
         return gapsSum / (count - 1);
     }
@@ -446,9 +446,48 @@ public final class Bonsai {
         private boolean lowerBoundInclusive = true;
         private boolean upperBoundInclusive = false;
 
+        public Range(final T lowerBound, final T upperBound, final boolean lowerBoundInclusive, final boolean upperBoundInclusive) {
+            this.lowerBound = lowerBound;
+            this.upperBound = upperBound;
+            this.lowerBoundInclusive = lowerBoundInclusive;
+            this.upperBoundInclusive = upperBoundInclusive;
+        }
+
         private Range(final T lowerBound, final T upperBound) {
             this.lowerBound = lowerBound;
             this.upperBound = upperBound;
+        }
+
+        public static class RangeBuilder<T extends Number & Comparable<T>> {
+            private T lowerBound;
+            private T upperBound;
+
+            private boolean lowerBoundInclusive = true;
+            private boolean upperBoundInclusive = false;
+
+            public RangeBuilder<T> setLowerBound(final T lowerBound) {
+                this.lowerBound = lowerBound;
+                return this;
+            }
+
+            public RangeBuilder<T> setUpperBound(final T upperBound) {
+                this.upperBound = upperBound;
+                return this;
+            }
+
+            public RangeBuilder<T> setLowerBoundInclusive(final boolean lowerBoundInclusive) {
+                this.lowerBoundInclusive = lowerBoundInclusive;
+                return this;
+            }
+
+            public RangeBuilder<T> setUpperBoundInclusive(final boolean upperBoundInclusive) {
+                this.upperBoundInclusive = upperBoundInclusive;
+                return this;
+            }
+
+            public Range<T> build() {
+                return new Range<>(lowerBound, upperBound, lowerBoundInclusive, upperBoundInclusive);
+            }
         }
 
         public void setLowerBound(final T lowerBound) {
@@ -500,53 +539,90 @@ public final class Bonsai {
                     : (lowerBoundInclusive ? (lowerCompare > -1 && upperCompare < 0) : (lowerCompare > 0 && upperCompare < 0));
         }
 
-        public static <T extends Number & Comparable<T>> Range<T> build(final T lowerBound, final T upperBound) {
-            return new Range<>(lowerBound, upperBound);
-        }
-
     }
 
-    public static class IntRange extends Range<Integer> {
+    public static class IntRange {
 
-        private IntRange(final Integer lowerBound, final Integer upperBound) {
-            super(lowerBound, upperBound);
+        private int lowerBound;
+        private int upperBound;
+
+        private boolean lowerBoundInclusive;
+        private boolean upperBoundInclusive;
+
+        private IntRange(final int lowerBound, final int upperBound, final boolean lowerBoundInclusive, final boolean upperBoundInclusive) {
+            this.lowerBound = lowerBound;
+            this.upperBound = upperBound;
+            this.lowerBoundInclusive = lowerBoundInclusive;
+            this.upperBoundInclusive = upperBoundInclusive;
         }
 
-        public void forEach(final IntConsumer consumer) {
-            int start = isLowerBoundInclusive() ? getLowerBound() : getLowerBound() + 1;
-            final int end = isUpperBoundInclusive() ? getUpperBound() : getUpperBound() - 1;
+        public static class IntRangeBuilder {
+            private int lowerBound = Integer.MIN_VALUE;
+            private int upperBound = Integer.MAX_VALUE;
+
+            private boolean lowerBoundInclusive = true;
+            private boolean upperBoundInclusive = false;
+
+
+            public IntRangeBuilder setLowerBound(final int lowerBound) {
+                this.lowerBound = lowerBound;
+                return this;
+            }
+
+            public IntRangeBuilder setUpperBound(final int upperBound) {
+                this.upperBound = upperBound;
+                return this;
+            }
+
+            public IntRangeBuilder setLowerBoundInclusive(final boolean lowerBoundInclusive) {
+                this.lowerBoundInclusive = lowerBoundInclusive;
+                return this;
+            }
+
+            public IntRangeBuilder setUpperBoundInclusive(final boolean upperBoundInclusive) {
+                this.upperBoundInclusive = upperBoundInclusive;
+                return this;
+            }
+
+            public IntRange build() {
+                return new IntRange(lowerBound, upperBound, lowerBoundInclusive, upperBoundInclusive);
+            }
+
+        }
+
+        public void setLowerBound(final int lowerBound) {
+            this.lowerBound = lowerBound;
+        }
+
+        public void setUpperBound(final int upperBound) {
+            this.upperBound = upperBound;
+        }
+
+        public void setLowerBoundInclusive(final boolean lowerBoundInclusive) {
+            this.lowerBoundInclusive = lowerBoundInclusive;
+        }
+
+        public void setUpperBoundInclusive(final boolean upperBoundInclusive) {
+            this.upperBoundInclusive = upperBoundInclusive;
+        }
+
+        public boolean isInRange(final int integer) {
+            if (upperBoundInclusive) {
+                if (lowerBoundInclusive) {
+                    return lowerBound <= integer && upperBound >= integer;
+                }
+                return lowerBound < integer && upperBound >= integer;
+            }
+            return lowerBound < integer && upperBound > integer;
+        }
+
+        public void forEach(final IntConsumer intConsumer) {
+            int start = lowerBound += (lowerBoundInclusive ? 0 : 1);
+            final int end = upperBound -= (lowerBoundInclusive ? 0 : 1);
             while (start <= end) {
-                consumer.accept(start);
+                intConsumer.accept(start);
                 start++;
             }
         }
-
-        public static IntRange build(final int lowerBound, final int upperBound) {
-            return new IntRange(lowerBound, upperBound);
-        }
-    }
-
-    public static class DoubleRange extends Range<Double> {
-
-        private DoubleRange(final Double lowerBound, final Double upperBound) {
-            super(lowerBound, upperBound);
-        }
-
-        public void forEach(final DoubleConsumer consumer, final double increase) {
-            double start = isLowerBoundInclusive() ? getLowerBound() : getLowerBound() + increase;
-            final double end = isUpperBoundInclusive() ? getUpperBound() : getUpperBound() - increase;
-            while (start <= end) {
-                consumer.accept(start);
-                start += increase;
-            }
-        }
-
-        public static DoubleRange build(final double lowerBound, final double upperBound) {
-            return new DoubleRange(lowerBound, upperBound);
-        }
-    }
-
-    public static boolean areSimilar(final double first, final double second, final double delta) {
-        return Math.abs(second - first) <= delta;
     }
 }
